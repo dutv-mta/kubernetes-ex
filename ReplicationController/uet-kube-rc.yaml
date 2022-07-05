@@ -1,0 +1,18 @@
+apiVersion: v1
+kind: ReplicationController
+metadata:
+  name: uet-kube-rc
+spec:
+  replicas: 2
+  selector: 
+    app: uet-kube # RC manage pod by label of pod
+  template:
+    metadata:
+      labels:
+        app: uet-kube # Label of pod
+    spec:
+      containers:
+      - image: dutvmta/uet-kube
+        name: uet-kube 
+        ports:
+          - containerPort: 3000

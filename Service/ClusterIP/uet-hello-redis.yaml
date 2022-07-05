@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: uet-hello-redis
+spec:
+  containers:
+    - image: dutvmta/uet-hello-redis
+      name: uet-hello-redis
