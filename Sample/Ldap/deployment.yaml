@@ -1,0 +1,132 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: openldap
+  namespace: company
+  labels:
+    app: openldap
+spec:
+  selector:
+    matchLabels:
+      app: openldap
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: openldap
+    spec:
+      containers:
+        - name: openldap
+          image: osixia/openldap:1.5.0
+          imagePullPolicy: "Always"
+          volumeMounts:
+            - name: db
+              mountPath: /var/lib/ldap
+            - name: config
+              mountPath: /etc/ldap/slapd
+            - name: certs
+              mountPath: /container/service/slapd/assets/certs/
+          env:
+            - name: LDAP_LOG_LEVEL
+              valueFrom:
+                secretKeyRef:
+                  key: log-level
+                  name: openldap
+            - name: LDAP_ORGANISATION
+              valueFrom:
+                secretKeyRef:
+                  key: organization
+                  name: openldap
+            - name: LDAP_DOMAIN
+              valueFrom:
+                secretKeyRef:
+                  key: domain
+                  name: openldap
+            - name: LDAP_BASE_DN
+              valueFrom:
+                secretKeyRef:
+                  key: base-dn
+                  name: openldap
+            - name: LDAP_ADMIN_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  key: adminpassword
+                  name: openldap
+            - name: LDAP_READONLY_USER
+              valueFrom:
+                secretKeyRef:
+                  key: read-only-user
+                  name: openldap
+            - name: LDAP_RFC2307BIS_SCHEMA
+              valueFrom:
+                secretKeyRef:
+                  key: rfc-schema
+                  name: openldap
+            - name: LDAP_BACKEND
+              valueFrom:
+                secretKeyRef:
+                  key: backend
+                  name: openldap
+            - name: LDAP_REPLICATION
+              valueFrom:
+                secretKeyRef:
+                  key: replication
+                  name: openldap
+            - name: KEEP_EXISTING_CONFIG
+              valueFrom:
+                secretKeyRef:
+                  key: existing-config
+                  name: openldap
+            - name: LDAP_REMOVE_CONFIG_AFTER_SETUP
+              valueFrom:
+                secretKeyRef:
+                  key: remove-config-after-setup
+                  name: openldap
+            - name: LDAP_SSL_HELPER_PREFIX
+              valueFrom:
+                secretKeyRef:
+                  key: ssl-helper-prefix
+                  name: openldap
+          ports:
+            - name: tcp-ldap
+              containerPort: 389
+      volumes:
+        - name: db
+          hostPath:
+            path: /opt/company/ldap/db
+        - name: config
+          hostPath:
+            path: /opt/company/ldap/config
+        - name: certs
+          hostPath:
+            path: /opt/company/ldap/certs
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: openldap-admin
+  namespace: company
+  labels:
+    app: openldap-admin
+spec:
+  selector:
+    matchLabels:
+      app: openldap-admin
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: openldap-admin
+    spec:
+      containers:
+        - name: phpldapadmin
+          image: osixia/phpldapadmin:latest
+          imagePullPolicy: "Always"
+          env:
+            - name: PHPLDAPADMIN_LDAP_HOSTS
+              value: openldap-admin-service
+            - name: PHPLDAPADMIN_HTTPS
+              value: "false"
+          ports:
+            - name: tcp-ldapadmin
+              containerPort: 80

@@ -1,0 +1,31 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: openldap
+  namespace: company
+  labels:
+    app: openldap
+spec:
+  type: ClusterIP
+  ports:
+    - name: tcp-ldap
+      port: 389
+      targetPort: tcp-ldap
+  selector:
+    app: openldap
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: openldap-admin-service
+  namespace: company
+  labels:
+    app: openldap-admin
+spec:
+  type: ClusterIP
+  ports:
+    - name: tcp-ldap-admin
+      port: 80
+      targetPort: tcp-ldapadmin
+  selector:
+    app: openldap-admin

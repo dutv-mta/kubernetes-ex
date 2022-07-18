@@ -1,0 +1,80 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: jira
+  namespace: company
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: jira
+  template:
+    metadata:
+      labels:
+        app: jira
+    spec:
+      containers:
+        - name: jira
+          image: cptactionhank/atlassian-jira:8.0.0
+          imagePullPolicy: IfNotPresent
+          ports:
+          - containerPort: 80
+          volumeMounts:
+            - name: data-folder
+              mountPath: /var/atlassian/jira
+            - name: jar-file
+              mountPath: /var/atlassian/jira/WEB-INF/lib/atlassian-extras-3.2.jar
+            - name: plugin
+              mountPath: /var/atlassian/jira/WEB-INF/atlassian-bundled-plugins/atlassian-universal-plugin-manager-plugin-4.0.0-bca9de4189.jar
+            - name: mysql-connector
+              mountPath: /var/atlassian/jira/lib/mysql-connector-java-5.1.47-bin.jar
+      volumes:
+        - name: data-folder
+          hostPath:
+            path: /opt/jira8-docker/data/jira
+        - name: jar-file
+          hostPath:
+            path: /opt/jira8-docker/crack_jira8/atlassian-extras-3.2.jar
+            type: File
+        - name: plugin
+          hostPath:
+            path: /opt/jira8-docker/crack_jira8/atlassian-universal-plugin-manager-plugin-4.0.0-bca9de4189.jar
+            type: File
+        - name: mysql-connector
+          hostPath:
+            path: /opt/jira8-docker/lib/mysql-connector-java-5.1.47-bin.jar
+            type: File
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: jira-service
+  namespace: company
+spec:
+  ports:
+  - port: 80
+    targetPort: 80
+    name: tcp
+  selector:
+    app: jira
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: jira-ingress
+  namespace: company
+  annotations:
+    kubernetes.io/ingress.class: "traefik"
+spec:
+  rules:
+  - host: jira.uetunited.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: jira-service
+            port:
+              number: 80
+
